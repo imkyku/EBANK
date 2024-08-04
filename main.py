@@ -5,10 +5,12 @@ from aiogram.filters import Command
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.strategy import FSMStrategy
 import asyncio
-from app.handlers import router, start_handler
+from app.handlers import router
+from app.handlers import start_handler
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, ConfigurationError
 import app.keyboard as kb
+from app.bills import router as bills_router
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
@@ -35,12 +37,18 @@ async def main():
         logging.error("Не удалось установить соединение с базой данных. Завершение работы.")
         return
 
+    # Подключите маршрутизатор для счетов и передайте объект базы данных
+
+    dp.include_router(bills_router)
+
     # Регистрация обработчика сообщений /start
     @dp.message(Command("start"))
     async def on_start_command(message: Message):
         await start_handler(message, db)
 
     await dp.start_polling(bot)
+
+
 
 if __name__ == '__main__':
     asyncio.run(main())

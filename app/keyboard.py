@@ -10,4 +10,14 @@ main = ReplyKeyboardMarkup(keyboard=[[KeyboardButton(text='👤 Профиль')
 profile = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='Статистика', callback_data='profilestats')],
                                                 [InlineKeyboardButton(text='Рефералы', callback_data='referals')]])
 
-trans = InlineKeyboardMarkup(inline_keyboard=[[InlineKeyboardButton(text='Быстрый перевод', callback_data='trans')]])
+trans = InlineKeyboardMarkup(inline_keyboard=[
+    [InlineKeyboardButton(text='Быстрый перевод', callback_data='trans')],
+    [InlineKeyboardButton(text='Выставить счет', callback_data='bills')]
+])
+
+bill_actions = InlineKeyboardMarkup(inline_keyboard=[
+    [
+        InlineKeyboardButton(text='Оплатить', callback_data='pay_bill'),
+        InlineKeyboardButton(text='Отклонить', callback_data='decline_bill')
+    ]
+])
