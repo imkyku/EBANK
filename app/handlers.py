@@ -4,27 +4,17 @@ from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 import app.keyboard as kb
-from app.transactions import TransactionManager
+from app.db import TransactionManager
 from pymongo import MongoClient
 from pymongo.errors import ConnectionFailure, ConfigurationError
 import logging
+from app.db import get_db
+
 
 router = Router()
 
-def setup_mongo():
-    try:
-        # Обновление строки подключения MongoDB
-        mongo_url = 'YOUR_MONGO_URI'
-        client = MongoClient(mongo_url)
-        db = client['data']  # Имя базы данных
-        return db
-    except (ConnectionFailure, ConfigurationError) as e:
-        logging.error(f"Ошибка подключения к MongoDB: {e}")
-        return None
-
-db = setup_mongo()
-if db is None:
-    raise Exception("Не удалось установить соединение с базой данных")
+db = get_db()
+if db is None: raise Exception("Не удалось установить соединение с базой данных")
 
 class TransferStates(StatesGroup):
     waiting_for_recipient_id = State()
@@ -37,7 +27,7 @@ async def start_handler(message: Message, db):
         "userid": user_id,
         "balance": 0,
         "referals": 0,
-        "status": "user",
+        "status": "Анонимный",
         "username": username if username else None
     }
 
@@ -47,11 +37,11 @@ async def start_handler(message: Message, db):
         collection.insert_one(user_data)
         transaction_manager = TransactionManager(db)
         transaction_manager.initialize_stats(user_id)
-        await message.answer("Вы успешно зарегистрированы в системе.", reply_markup=kb.main)
+        await message.answer("Вы успешно зарегистрированы.", reply_markup=kb.main)
     else:
         transaction_manager = TransactionManager(db)
         transaction_manager.initialize_stats(user_id)
-        await message.answer("Вы уже зарегистрированы в системе.", reply_markup=kb.main)
+        await message.answer("Вы уже зарегистрированы.", reply_markup=kb.main)
 
 @router.message(Command('zighalal1488mednibichok'))
 async def cmd_zighalal(message: Message):
@@ -64,13 +54,12 @@ async def profile(message: Message):
     user = transaction_manager.get_user(user_id)
 
     if user:
-        profile_text = (f"<b>💸 Ваш профиль:</b>\n\n"
-                        f"🪁 Ваше имя: {user.get('username', 'N/A')}\n"
-                        f"🏮 Ваш ID: {user['userid']}\n"
-                        f"🔮 Ваш баланс: {user['balance']}")
+        profile_text = (f"<b>💸 Профиль</b>\n\n"
+                        f"🪁 Никнейм: @{user.get('username', 'N/A')}\n"
+                        f"🏮 ID: {user['userid']}\n"
+                        f"🔮 Баланс: {user['balance']}")
         await message.reply(profile_text, reply_markup=kb.profile, parse_mode='HTML')
-    else:
-        await message.reply("Пользователь не найден в системе.")
+    else: await message.reply("Пользователь не найден в системе.")
 
 @router.callback_query(F.data == 'profilestats')
 async def profilestats(callback: CallbackQuery):
@@ -84,8 +73,10 @@ async def profilestats(callback: CallbackQuery):
                       f"Расходы: {stats['expenses']}\n"
                       f"Профит: {stats['profit']}")
         await callback.message.answer(stats_text, parse_mode='HTML')
+        await callback.answer()
     else:
         await callback.message.answer("Статистика не найдена.")
+        await callback.answer()
 
 @router.message(F.text == '🧶 Операции')
 async def operations(message: Message):
