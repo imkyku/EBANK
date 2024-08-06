@@ -16,8 +16,6 @@ trans = InlineKeyboardMarkup(inline_keyboard=[
 ])
 
 bill_actions = InlineKeyboardMarkup(inline_keyboard=[
-    [
-        InlineKeyboardButton(text='Оплатить', callback_data='pay_bill'),
-        InlineKeyboardButton(text='Отклонить', callback_data='decline_bill')
-    ]
+    [InlineKeyboardButton(text='Оплатить', callback_data='pay_bill'),
+    InlineKeyboardButton(text='Отклонить', callback_data='decline_bill')]
 ])

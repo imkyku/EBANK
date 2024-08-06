@@ -1,7 +1,17 @@
+import logging
+import config.config as conf
+from pymongo import MongoClient
+from pymongo.errors import ConnectionFailure, ConfigurationError
+
+def get_db():
+    client = MongoClient(conf.MONGOURI)
+    return client[conf.DBNAME]
+
 class TransactionManager:
     def __init__(self, db):
         self.db = db
         self.collection_userdata = db['userdata']
+        self.collection_bills = db['bills']
         self.collection_transactions = db['transactions']
         self.collection_stats = db['stats']
 
@@ -86,3 +96,9 @@ class TransactionManager:
 
     def get_stats(self, user_id):
         return self.collection_stats.find_one({"userid": user_id})
+
+    def create_bill(self, bill_data):
+        self.collection_bills.insert_one(bill_data)
+
+
+

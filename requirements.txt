@@ -1,2 +1,4 @@
-pymongo
 aiogram
+pymongo
+asyncio
+yoomoney

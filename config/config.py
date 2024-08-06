@@ -1,0 +1,6 @@
+TOKEN = ''
+
+MONGOURI = ''
+DBNAME = ''
+
+YOOMONEY = ''
