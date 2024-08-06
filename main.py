@@ -1,45 +1,36 @@
 import logging
+import asyncio
 from aiogram import Bot, Dispatcher
 from aiogram.types import Message
 from aiogram.filters import Command
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.fsm.strategy import FSMStrategy
-import asyncio
+
+import app.keyboard as kb
+import config.config as conf
 from app.handlers import router
 from app.handlers import start_handler
-from pymongo import MongoClient
-from pymongo.errors import ConnectionFailure, ConfigurationError
-import app.keyboard as kb
+from app.db import get_db
 from app.bills import router as bills_router
+from app.deposit import router as deposit_router
 
 # Настройка логирования
 logging.basicConfig(level=logging.INFO)
 
-def setup_mongo():
-    try:
-        # Обновление строки подключения MongoDB
-        mongo_url = 'YOUR_MONGO_URI'
-        client = MongoClient(mongo_url)
-        db = client['data']  # Имя базы данных
-        return db
-    except (ConnectionFailure, ConfigurationError) as e:
-        logging.error(f"Ошибка подключения к MongoDB: {e}")
-        return None
-
 async def main():
-    bot = Bot(token='YOUR_BOT_TOKEN')
+    bot = Bot(token=conf.TOKEN)
     dp = Dispatcher(storage=MemoryStorage(), fsm_strategy=FSMStrategy.CHAT)
     dp.include_router(router)
 
     # Настройка MongoDB
-    db = setup_mongo()
+    db = get_db()
     if db is None:
         logging.error("Не удалось установить соединение с базой данных. Завершение работы.")
         return
 
     # Подключите маршрутизатор для счетов и передайте объект базы данных
-
     dp.include_router(bills_router)
+    dp.include_router(deposit_router)
 
     # Регистрация обработчика сообщений /start
     @dp.message(Command("start"))
@@ -48,7 +39,7 @@ async def main():
 
     await dp.start_polling(bot)
 
-
-
 if __name__ == '__main__':
-    asyncio.run(main())
+    try: asyncio.run(main())
+    except KeyboardInterrupt:
+        print('✯ Перезагрузка....')
